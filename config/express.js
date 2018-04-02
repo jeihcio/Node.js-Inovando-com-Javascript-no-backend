@@ -12,6 +12,8 @@ module.exports = function() {
 		extended: true
 	}));
 
+	app.use(bodyParser.json());
+
 	load('routes', {
 		cwd: 'app'
 	}).then('infra')
