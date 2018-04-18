@@ -2,7 +2,7 @@ var mysql = require('mysql');
 
 function createDBConnection(){
 	if(!process.env.NODE_ENV){
-		return connection = mysql.createConnection({
+		return mysql.createConnection({
 				    host: 'localhost',
 			   		user: 'root',
 			   		password: 'toor',
@@ -11,7 +11,7 @@ function createDBConnection(){
 	}
 
 	if(process.env.NODE_ENV == 'test'){
-		return connection = mysql.createConnection({
+		return mysql.createConnection({
 				    host: 'localhost',
 			   		user: 'root',
 			   		password: 'toor',

@@ -1,62 +1,70 @@
-module.exports = function(app){
-	app.get('/produtos',function(req,res,next){
-	    var connection = app.infra.connectionFactory();
-	    var produtosDAO = new app.infra.ProdutosDAO(connection);
+module.exports = function(app) {
 
-	    produtosDAO.lista(function(erros,resultados){
-	    	if(erros){
-	    		return next(erros);
-	    	}
+    var listaProdutos = function(req, res, next) {
+        var connection = app.infra.connectionFactory();
+        var produtosDAO = new app.infra.ProdutosDAO(connection);
 
-	        res.format({
-	            html: function(){
-	                res.render('produtos/lista',{lista:resultados});
-	            },
+        produtosDAO.lista(function(err, results) {
+            if(err) {
+                return next(err);
+            }
+            res.format({
+                html: function() {
+                    res.render('produtos/lista', {lista:results});
+                },
+                json: function() {
+                    res.json(results);
+                }
+            });
+        });
 
-	            json: function(){
-	                res.json(resultados)
-	            }
-	        });
+        connection.end();
+    }
 
-	    });
+    app.get('/produtos', listaProdutos);
 
-	    connection.end();
-	});
+    app.get('/produtos/json', function(req, res) {
+        var connection = app.infra.connectionFactory();
+        var produtosDAO = new app.infra.ProdutosDAO(connection);
 
-	app.get('/produtos/form',function(req,res){
-		res.render('produtos/form',{
-			errosValidacao: {},
-			produto: {}
-		});
-	});
+        produtosDAO.lista(function(err, results) {
+            res.json(results);
+        });
 
-	app.post('/produtos',function(req,res){
-		var produto = req.body;
+        connection.end();
+    });
 
-		req.assert('titulo','Titulo é obrigatório').notEmpty();
-		req.assert('preco','Formato invalido').isFloat();
+    app.get('/produtos/form', function(req, res) {
+        res.render('produtos/form', {errosValidacao:{}, produto:{}});
+    });
 
-    	var erros = req.validationErrors();
+    app.post('/produtos', function(req, res) {
+        var produto = req.body;
 
-    	if(erros){
-        	res.format({
-			    html: function(){
-			        res.status(400).render('produtos/form',{errosValidacao:erros,produto:produto});
-			    },
-			    json: function(){
-			        res.status(400).json(erros);
-			    }
-			});
-        	return;
-    	}
+        req.assert('titulo', 'Titulo é obrigatório').notEmpty();
+        req.assert('preco', 'Formato inválido').isFloat();
 
-		var connection = app.infra.connectionFactory();
-		var produtosDAO = new app.infra.ProdutosDAO(connection);
+        var erros = req.validationErrors();
+        if(erros) {
+            res.format({
+                html: function() {
+                    res.status(400).render('produtos/form', {errosValidacao:erros, produto:produto});
+                },
+                json: function() {
+                    res.status(400).json(erros);
+                }
+            });
 
-		produtosDAO.salva(produto,function(erros,resultados){
-			res.redirect('/produtos');
-		});
+            return;
+        }
 
-		connection.end();
-	});
+        var connection = app.infra.connectionFactory();
+        var produtosDAO = new app.infra.ProdutosDAO(connection);
+
+        produtosDAO.salva(produto, function(err, results) {
+            res.redirect('/produtos');
+        });
+
+        connection.end();
+    });
 }
